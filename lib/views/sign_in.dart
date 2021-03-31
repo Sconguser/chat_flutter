@@ -1,5 +1,31 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:chat/shared/constants.dart';
+import 'package:chat/shared/loading.dart';
+import 'package:chat/views/chat.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:http/http.dart' as http;
+import 'package:chat/models/album.dart';
+
+Future<Album> createAlbum(String username, String password) async{
+  final response = await http.post(
+    Uri.https('jsonplaceholder.typicode.com', 'albums'),
+    headers:<String, String>{
+      'Content-Type':'application/json; charset=UTF-8',
+    },
+    body:jsonEncode(<String, String>{
+      'username':username,
+      'password':password
+      }),
+  );
+
+  if(response.statusCode==201){
+    return Album.fromJson(jsonDecode(response.body));
+  }else{
+    throw Exception('Failed to create album');
+  }
+}
 
 class SignIn extends StatefulWidget {
 
@@ -12,11 +38,12 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
 
-
+  Future<Album> _futureAlbum;
   final _formKey = GlobalKey<FormState>();
   String email='';
   String password='';
-
+  bool loading = false;
+  //bool isSigned = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +71,7 @@ class _SignInState extends State<SignIn> {
         padding: EdgeInsets.symmetric(vertical: 20, horizontal: 50),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: (_futureAlbum==null)? Column(
             children: [
               SizedBox(height:20),
               TextFormField(
@@ -70,17 +97,35 @@ class _SignInState extends State<SignIn> {
               SizedBox(height:20),
               ElevatedButton(
                 onPressed: (){
+                  ///Navigator.pushReplacementNamed(context, '/chat');
+                  //setState(() => isSigned=true);
                   print(email);
                   print(password);
+                  setState((){
+                    _futureAlbum = createAlbum(email,password);
+                  });
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.purple,
+                  primary: Colors.blue,
                   onPrimary: Colors.deepPurple,
                 ),
                   child: Text('Sign In'),
               )
             ],
-          ),
+          ) :
+              FutureBuilder<Album>(
+                future:_futureAlbum,
+                builder:(context,snapshot){
+                  if(snapshot.hasData){
+                    return Text(snapshot.data.token);
+                  }
+                  else if(snapshot.hasError){
+                    return Text("${snapshot.error}");
+                  }
+                  return Loading();
+                }
+              )
+
         )
       )
     );
