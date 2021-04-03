@@ -1,13 +1,13 @@
 import 'package:http/http.dart';
 
 class Album{
- final String token;
+ final String username;
 
- Album({this.token});
+ Album({this.username});
 
  factory Album.fromJson(Map<String, dynamic> json){
    return Album(
-     token:json['token']
+     username:json['username']
    );
  }
 }

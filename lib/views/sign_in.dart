@@ -9,22 +9,26 @@ import 'package:http/http.dart' as http;
 import 'package:chat/models/album.dart';
 
 Future<Album> createAlbum(String username, String password) async{
-  final response = await http.post(
-    Uri.https('jsonplaceholder.typicode.com', 'albums'),
+  try{final response = await http.post(
+    Uri.https('rathahon.pythonanywhere.com', 'api/user-login/'),
     headers:<String, String>{
-      'Content-Type':'application/json; charset=UTF-8',
+      /// 'Content-Type':'application/json; charset=UTF-8',
+      'Authorization': 'Token fa438743b59061bc1a158e3f5de687980ac4f7fa',
     },
     body:jsonEncode(<String, String>{
       'username':username,
       'password':password
       }),
   );
-
-  if(response.statusCode==201){
+  print(response.statusCode);
+  if(response.statusCode==200){
+    print('Udalo sie zalogowac uzytkownika');
     return Album.fromJson(jsonDecode(response.body));
   }else{
+    print("Nie udalo sie zalogowac uzytkownika");
     throw Exception('Failed to create album');
-  }
+  }}
+  catch(e){print(e);}
 }
 
 class SignIn extends StatefulWidget {
@@ -86,7 +90,7 @@ class _SignInState extends State<SignIn> {
               SizedBox(height:20),
               TextFormField(
                 decoration: textInputDecoration.copyWith(hintText: 'Password'),
-                obscureText: true,
+                obscureText: false,
                 validator: (value)=>value.isEmpty ? 'Enter password' : null,
                 onChanged: (value){
                   setState(() {
@@ -117,7 +121,7 @@ class _SignInState extends State<SignIn> {
                 future:_futureAlbum,
                 builder:(context,snapshot){
                   if(snapshot.hasData){
-                    return Text(snapshot.data.token);
+                    return Text(snapshot.data.username);
                   }
                   else if(snapshot.hasError){
                     return Text("${snapshot.error}");
